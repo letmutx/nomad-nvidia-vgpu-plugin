@@ -1,10 +1,11 @@
 package main
 
 import (
+	"context"
+
 	log "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/plugins"
-
-	"github.com/hashicorp/nomad-skeleton-device-plugin/device"
+	device "github.com/letmutx/nomad-nvidia-vgpu-plugin"
 )
 
 func main() {
@@ -14,5 +15,5 @@ func main() {
 
 // factory returns a new instance of our example device plugin
 func factory(log log.Logger) interface{} {
-	return device.NewPlugin(log)
+	return device.NewPlugin(context.Background(), log)
 }
