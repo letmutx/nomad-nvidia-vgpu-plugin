@@ -39,7 +39,7 @@ func (d *NvidiaVgpuDevice) nvDeviceToVirtDevices(ctx context.Context, nvFpr *dev
 		}
 
 		for _, nvDevice := range nvDeviceGroup.Devices {
-			for i := 0; i < d.vgpuMultiplier; i++ {
+			for i := 0; i < d.vgpus; i++ {
 				dev := &device.Device{
 					ID:         fmt.Sprintf("%s-%d", nvDevice.ID, i),
 					Healthy:    nvDevice.Healthy,

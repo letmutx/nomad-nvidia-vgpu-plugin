@@ -37,7 +37,7 @@ func (d *NvidiaVgpuDevice) nvStatsToVirtstats(nvStats *device.StatsResponse) *de
 
 		instanceStats := map[string]*device.DeviceStats{}
 		for dev, stats := range group.InstanceStats {
-			for i := 0; i < d.vgpuMultiplier; i++ {
+			for i := 0; i < d.vgpus; i++ {
 				dev := fmt.Sprintf("%s-%d", dev, i)
 				instanceStats[dev] = stats
 			}

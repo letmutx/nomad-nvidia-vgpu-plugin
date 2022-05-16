@@ -1,14 +1,14 @@
-PLUGIN_BINARY=skeleton-device
+PLUGIN_BINARY=nomad-nvidia-vgpu-plugin
 export GO111MODULE=on
 
 default: build
 
 .PHONY: clean
 clean: ## Remove build artifacts
-	rm -rf skeleton-device launcher
+	rm -rf nomad-nvidia-vgpu-plugin launcher
 
 build:
-	go build -o ${PLUGIN_BINARY} .
+	go build -o ${PLUGIN_BINARY} ./cmd/main.go
 
 .PHONY: eval
 eval: deps build

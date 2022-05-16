@@ -9,12 +9,11 @@ import (
 	"time"
 
 	log "github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/nomad/devices/gpu/nvidia"
 	"github.com/hashicorp/nomad/helper/pluginutils/loader"
 	"github.com/hashicorp/nomad/plugins/base"
 	"github.com/hashicorp/nomad/plugins/device"
 	"github.com/hashicorp/nomad/plugins/shared/hclspec"
-
-	"github.com/hashicorp/nomad/devices/gpu/nvidia"
 )
 
 const (
@@ -31,9 +30,6 @@ const (
 	// along with "type" and "model", this can be used when requesting devices:
 	//   https://www.nomadproject.io/docs/job-specification/device.html#name
 	vendor = "letmutx"
-
-	// deviceType is the "type" of device being returned
-	deviceType = device.DeviceTypeGPU
 )
 
 var (
@@ -69,8 +65,8 @@ var (
 			hclspec.NewAttr("fingerprint_period", "string", false),
 			hclspec.NewLiteral("\"1m\""),
 		),
-		"vgpu_multiplier": hclspec.NewDefault(
-			hclspec.NewAttr("vgpu_mulitplier", "number", true),
+		"vgpus": hclspec.NewDefault(
+			hclspec.NewAttr("vgpus", "number", true),
 			hclspec.NewLiteral("1"),
 		),
 	})
@@ -78,19 +74,17 @@ var (
 
 // Config contains configuration information for the plugin.
 type Config struct {
-	VgpuMultiplier int `codec:"vgpu_multiplier"`
+	Vgpus int `codec:"vgpus"`
 }
 
 // NvidiaVgpuDevice contains a skeleton for most of the implementation of a
 // device plugin.
 type NvidiaVgpuDevice struct {
 	*nvidia.NvidiaDevice
-	vgpuMultiplier int
+	vgpus int
 
 	devices    map[string]struct{}
 	deviceLock sync.RWMutex
-
-	log log.Logger
 }
 
 // NewPlugin returns a device plugin, used primarily by the main wrapper
@@ -98,11 +92,9 @@ type NvidiaVgpuDevice struct {
 // Plugin configuration isn't available yet, so there will typically be
 // a limit to the initialization that can be performed at this point.
 func NewPlugin(ctx context.Context, log log.Logger) *NvidiaVgpuDevice {
-	device := nvidia.NewNvidiaDevice(ctx, log)
 	return &NvidiaVgpuDevice{
-		NvidiaDevice: device,
+		NvidiaDevice: nvidia.NewNvidiaDevice(ctx, log),
 		devices:      map[string]struct{}{},
-		log:          log.Named(pluginName),
 	}
 }
 
@@ -131,8 +123,8 @@ func (d *NvidiaVgpuDevice) SetConfig(c *base.Config) (err error) {
 		return err
 	}
 
-	if config.VgpuMultiplier <= 0 {
-		return fmt.Errorf("invalid value for vgpu_multiplier %q: %v", config.VgpuMultiplier, errors.New("must be >= 1"))
+	if config.Vgpus <= 0 {
+		return fmt.Errorf("invalid value for vgpus %q: %v", config.Vgpus, errors.New("must be >= 1"))
 	}
 
 	if err = d.NvidiaDevice.SetConfig(c); err != nil {
@@ -148,11 +140,11 @@ func (d *NvidiaVgpuDevice) SetConfig(c *base.Config) (err error) {
 func (d *NvidiaVgpuDevice) Fingerprint(ctx context.Context) (<-chan *device.FingerprintResponse, error) {
 	// Fingerprint returns a channel. The recommended way of organizing a plugin
 	// is to pass that into a long-running goroutine and return the channel immediately.
-	outCh := make(chan *device.FingerprintResponse)
 	nvOut, err := d.NvidiaDevice.Fingerprint(ctx)
 	if err != nil {
 		return nil, err
 	}
+	outCh := make(chan *device.FingerprintResponse)
 	go d.doFingerprint(ctx, nvOut, outCh)
 	return outCh, nil
 }
@@ -163,11 +155,11 @@ func (d *NvidiaVgpuDevice) Stats(ctx context.Context, interval time.Duration) (<
 	// Similar to Fingerprint, Stats returns a channel. The recommended way of
 	// organizing a plugin is to pass that into a long-running goroutine and
 	// return the channel immediately.
-	outCh := make(chan *device.StatsResponse)
 	nvOut, err := d.NvidiaDevice.Stats(ctx, interval)
 	if err != nil {
 		return nil, err
 	}
+	outCh := make(chan *device.StatsResponse)
 	go d.doStats(ctx, nvOut, outCh)
 	return outCh, nil
 }
