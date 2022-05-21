@@ -45,13 +45,6 @@ var (
 		Factory: func(ctx context.Context, l log.Logger) interface{} { return NewPlugin(ctx, l) },
 	}
 
-	// configSpec is the specification of the schema for this plugin's config.
-	// this is used to validate the HCL for the plugin provided
-	// as part of the client config:
-	//   https://www.nomadproject.io/docs/configuration/plugin.html
-	// options are here:
-	//   https://github.com/hashicorp/nomad/blob/v0.10.0/plugins/shared/hclspec/hcl_spec.proto
-	// configSpec is the specification of the plugin's configuration
 	configSpec = hclspec.NewObject(map[string]*hclspec.Spec{
 		"enabled": hclspec.NewDefault(
 			hclspec.NewAttr("enabled", "bool", false),
@@ -72,29 +65,34 @@ var (
 	})
 )
 
+type NvidiaDevicePlugin = device.DevicePlugin
+
 // Config contains configuration information for the plugin.
 type Config struct {
 	Vgpus int `codec:"vgpus"`
 }
 
-// NvidiaVgpuDevice contains a skeleton for most of the implementation of a
-// device plugin.
-type NvidiaVgpuDevice struct {
-	*nvidia.NvidiaDevice
+// NvidiaVgpuPlugin is a wrapper for NvidiaDevicePlugin
+// It handles fingerprinting, stats and allocation of virtual devices
+type NvidiaVgpuPlugin struct {
+	NvidiaDevicePlugin
 	vgpus int
 
 	devices    map[string]struct{}
 	deviceLock sync.RWMutex
+
+	log log.Logger
 }
 
 // NewPlugin returns a device plugin, used primarily by the main wrapper
 //
 // Plugin configuration isn't available yet, so there will typically be
 // a limit to the initialization that can be performed at this point.
-func NewPlugin(ctx context.Context, log log.Logger) *NvidiaVgpuDevice {
-	return &NvidiaVgpuDevice{
-		NvidiaDevice: nvidia.NewNvidiaDevice(ctx, log),
-		devices:      map[string]struct{}{},
+func NewPlugin(ctx context.Context, log log.Logger) *NvidiaVgpuPlugin {
+	return &NvidiaVgpuPlugin{
+		NvidiaDevicePlugin: nvidia.NewNvidiaDevice(ctx, log),
+		devices:            map[string]struct{}{},
+		log:                log,
 	}
 }
 
@@ -102,7 +100,7 @@ func NewPlugin(ctx context.Context, log log.Logger) *NvidiaVgpuDevice {
 //
 // This is called during Nomad client startup, while discovering and loading
 // plugins.
-func (d *NvidiaVgpuDevice) PluginInfo() (*base.PluginInfoResponse, error) {
+func (d *NvidiaVgpuPlugin) PluginInfo() (*base.PluginInfoResponse, error) {
 	return pluginInfo, nil
 }
 
@@ -110,12 +108,12 @@ func (d *NvidiaVgpuDevice) PluginInfo() (*base.PluginInfoResponse, error) {
 //
 // This is called during Nomad client startup, immediately before parsing
 // plugin config and calling SetConfig
-func (d *NvidiaVgpuDevice) ConfigSchema() (*hclspec.Spec, error) {
+func (d *NvidiaVgpuPlugin) ConfigSchema() (*hclspec.Spec, error) {
 	return configSpec, nil
 }
 
 // SetConfig is called by the client to pass the configuration for the plugin.
-func (d *NvidiaVgpuDevice) SetConfig(c *base.Config) (err error) {
+func (d *NvidiaVgpuPlugin) SetConfig(c *base.Config) (err error) {
 	var config Config
 
 	// decode the plugin config
@@ -124,23 +122,20 @@ func (d *NvidiaVgpuDevice) SetConfig(c *base.Config) (err error) {
 	}
 
 	if config.Vgpus <= 0 {
-		return fmt.Errorf("invalid value for vgpus %q: %v", config.Vgpus, errors.New("must be >= 1"))
+		return fmt.Errorf("invalid value for vgpus %q: %w", config.Vgpus, errors.New("must be >= 1"))
 	}
+	d.vgpus = config.Vgpus
 
-	if err = d.NvidiaDevice.SetConfig(c); err != nil {
-		return err
-	}
-
-	return nil
+	return d.NvidiaDevicePlugin.SetConfig(c)
 }
 
 // Fingerprint streams detected devices.
 // Messages should be emitted to the returned channel when there are changes
 // to the devices or their health.
-func (d *NvidiaVgpuDevice) Fingerprint(ctx context.Context) (<-chan *device.FingerprintResponse, error) {
+func (d *NvidiaVgpuPlugin) Fingerprint(ctx context.Context) (<-chan *device.FingerprintResponse, error) {
 	// Fingerprint returns a channel. The recommended way of organizing a plugin
 	// is to pass that into a long-running goroutine and return the channel immediately.
-	nvOut, err := d.NvidiaDevice.Fingerprint(ctx)
+	nvOut, err := d.NvidiaDevicePlugin.Fingerprint(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -151,11 +146,11 @@ func (d *NvidiaVgpuDevice) Fingerprint(ctx context.Context) (<-chan *device.Fing
 
 // Stats streams statistics for the detected devices.
 // Messages should be emitted to the returned channel on the specified interval.
-func (d *NvidiaVgpuDevice) Stats(ctx context.Context, interval time.Duration) (<-chan *device.StatsResponse, error) {
+func (d *NvidiaVgpuPlugin) Stats(ctx context.Context, interval time.Duration) (<-chan *device.StatsResponse, error) {
 	// Similar to Fingerprint, Stats returns a channel. The recommended way of
 	// organizing a plugin is to pass that into a long-running goroutine and
 	// return the channel immediately.
-	nvOut, err := d.NvidiaDevice.Stats(ctx, interval)
+	nvOut, err := d.NvidiaDevicePlugin.Stats(ctx, interval)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +170,7 @@ func (e *reservationError) Error() string {
 // Reserve returns information to the task driver on on how to mount the given devices.
 // It may also perform any device-specific orchestration necessary to prepare the device
 // for use. This is called in a pre-start hook on the client, before starting the workload.
-func (d *NvidiaVgpuDevice) Reserve(deviceIDs []string) (*device.ContainerReservation, error) {
+func (d *NvidiaVgpuPlugin) Reserve(deviceIDs []string) (*device.ContainerReservation, error) {
 	if len(deviceIDs) == 0 {
 		return &device.ContainerReservation{}, nil
 	}

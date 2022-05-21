@@ -8,7 +8,7 @@ import (
 )
 
 // doFingerprint is the long-running goroutine that detects device changes
-func (d *NvidiaVgpuDevice) doFingerprint(ctx context.Context, nvDevices <-chan *device.FingerprintResponse, virtDevices chan *device.FingerprintResponse) {
+func (d *NvidiaVgpuPlugin) doFingerprint(ctx context.Context, nvDevices <-chan *device.FingerprintResponse, virtDevices chan *device.FingerprintResponse) {
 	defer close(virtDevices)
 
 	for {
@@ -21,14 +21,14 @@ func (d *NvidiaVgpuDevice) doFingerprint(ctx context.Context, nvDevices <-chan *
 	}
 }
 
-func (d *NvidiaVgpuDevice) nvDeviceToVirtDevices(ctx context.Context, nvFpr *device.FingerprintResponse) *device.FingerprintResponse {
+func (d *NvidiaVgpuPlugin) nvDeviceToVirtDevices(ctx context.Context, nvFpr *device.FingerprintResponse) *device.FingerprintResponse {
 	if nvFpr.Error != nil {
 		return nvFpr
 	}
-	var fpr device.FingerprintResponse
-
 	d.deviceLock.Lock()
 	defer d.deviceLock.Unlock()
+
+	var devices []*device.DeviceGroup
 
 	for _, nvDeviceGroup := range nvFpr.Devices {
 		devGroup := &device.DeviceGroup{
@@ -51,8 +51,8 @@ func (d *NvidiaVgpuDevice) nvDeviceToVirtDevices(ctx context.Context, nvFpr *dev
 			}
 		}
 
-		fpr.Devices = append(fpr.Devices, devGroup)
+		devices = append(devices, devGroup)
 	}
 
-	return &fpr
+	return device.NewFingerprint(devices...)
 }

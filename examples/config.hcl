@@ -1,3 +1,4 @@
 config {
-  some_required_boolean = true
+    enabled = true
+    vgpus = 8
 }

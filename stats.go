@@ -8,7 +8,7 @@ import (
 )
 
 // doStats is the long running goroutine that streams device statistics
-func (d *NvidiaVgpuDevice) doStats(ctx context.Context, nvStats <-chan *device.StatsResponse, stats chan<- *device.StatsResponse) {
+func (d *NvidiaVgpuPlugin) doStats(ctx context.Context, nvStats <-chan *device.StatsResponse, stats chan<- *device.StatsResponse) {
 	defer close(stats)
 
 	for {
@@ -21,7 +21,7 @@ func (d *NvidiaVgpuDevice) doStats(ctx context.Context, nvStats <-chan *device.S
 	}
 }
 
-func (d *NvidiaVgpuDevice) nvStatsToVirtstats(nvStats *device.StatsResponse) *device.StatsResponse {
+func (d *NvidiaVgpuPlugin) nvStatsToVirtstats(nvStats *device.StatsResponse) *device.StatsResponse {
 	if nvStats.Error != nil {
 		return nvStats
 	}
