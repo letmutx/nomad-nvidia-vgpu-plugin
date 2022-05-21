@@ -13,8 +13,8 @@ This plugin needs the following dependencies to function:
 * NVIDIA GPU with Architecture > Fermi (2.1)
 * NVIDIA drivers >= 340.29 with binary nvidia-smi
 * Docker v19.03+
- 
-Copy the plugin binary to the [plugins directory](https://www.nomadproject.io/docs/configuration/index.html#plugin_dir) and [configure the plugin](https://www.nomadproject.io/docs/configuration/plugin.html) in the client config. Also, see the requirements for the official [nvidia-plugin](https://www.nomadproject.io/plugins/devices/nvidia#installation-requirements). 
+
+Copy the plugin binary to the [plugins directory](https://www.nomadproject.io/docs/configuration/index.html#plugin_dir) and [configure the plugin](https://www.nomadproject.io/docs/configuration/plugin.html) in the client config. Also, see the requirements for the official [nvidia-plugin](https://www.nomadproject.io/plugins/devices/nvidia#installation-requirements).
 
 ```hcl
 plugin "nvidia-vgpu" {
@@ -29,7 +29,7 @@ plugin "nvidia-vgpu" {
 Usage
 --------------
 
-Then use the [device stanza](https://www.nomadproject.io/docs/job-specification/device.html) in the job file to schedule with device support.
+Use the [device stanza](https://www.nomadproject.io/docs/job-specification/device.html) in the job file to schedule with device support.
 
 ```hcl
 job "gpu-test" {
@@ -46,7 +46,7 @@ job "gpu-test" {
       }
 
       resources {
-        device "nvidia-vgpu/gpu" {
+        device "letmutx/gpu" {
           count = 1
 
           # Add an affinity for a particular model
@@ -62,4 +62,22 @@ job "gpu-test" {
 }
 ```
 
+Notes
+-------
 
+* GPU memory allocation/usage is handled in a cooperative manner. This means that one bad GPU process using more memory than assigned can cause starvation for other processes.
+* Managing memory isolation per task is left to the user. It depends on a lot of factors like [MPS](https://docs.nvidia.com/deploy/mps/index.html#topic_3_3_3), GPU architecture etc. [This doc](https://drops.dagstuhl.de/opus/volltexte/2018/8984/pdf/LIPIcs-ECRTS-2018-20.pdf) has some information.
+
+Testing
+---------
+The best way to test the plugin is to go to a target machine with Nvidia GPU and run the plugin using Nomad's [plugin launcher](https://github.com/hashicorp/nomad/blob/main/plugins/shared/cmd/launcher/README.md) with:
+
+```shell
+make eval
+```
+
+Inspired by
+--------------
+
+* https://github.com/awslabs/aws-virtual-gpu-device-plugin
+* https://github.com/kubernetes/kubernetes/issues/52757#issuecomment-402772200
