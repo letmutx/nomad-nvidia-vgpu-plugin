@@ -10,7 +10,6 @@ import (
 
 	log "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/nomad/devices/gpu/nvidia"
-	"github.com/hashicorp/nomad/helper/pluginutils/loader"
 	"github.com/hashicorp/nomad/plugins/base"
 	"github.com/hashicorp/nomad/plugins/device"
 	"github.com/hashicorp/nomad/plugins/shared/hclspec"
@@ -39,10 +38,6 @@ var (
 		PluginApiVersions: []string{device.ApiVersion010},
 		PluginVersion:     pluginVersion,
 		Name:              pluginName,
-	}
-
-	PluginConfig = &loader.InternalPluginConfig{
-		Factory: func(ctx context.Context, l log.Logger) interface{} { return NewPlugin(ctx, l) },
 	}
 
 	configSpec = hclspec.NewObject(map[string]*hclspec.Spec{
@@ -85,9 +80,13 @@ type NvidiaVgpuPlugin struct {
 //
 // Plugin configuration isn't available yet, so there will typically be
 // a limit to the initialization that can be performed at this point.
-func NewPlugin(ctx context.Context, log log.Logger) *NvidiaVgpuPlugin {
+func NewPlugin(ctx context.Context, log log.Logger) interface{} {
+	return NewPluginWithNvidiaPlugin(ctx, log, nvidia.NewNvidiaDevice(ctx, log))
+}
+
+func NewPluginWithNvidiaPlugin(ctx context.Context, log log.Logger, nv NvidiaDevicePlugin) *NvidiaVgpuPlugin {
 	return &NvidiaVgpuPlugin{
-		NvidiaDevicePlugin: nvidia.NewNvidiaDevice(ctx, log),
+		NvidiaDevicePlugin: nv,
 		devices:            map[string]struct{}{},
 		log:                log,
 	}
