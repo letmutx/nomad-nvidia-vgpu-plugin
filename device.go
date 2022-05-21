@@ -58,10 +58,7 @@ var (
 			hclspec.NewAttr("fingerprint_period", "string", false),
 			hclspec.NewLiteral("\"1m\""),
 		),
-		"vgpus": hclspec.NewDefault(
-			hclspec.NewAttr("vgpus", "number", true),
-			hclspec.NewLiteral("1"),
-		),
+		"vgpus": hclspec.NewAttr("vgpus", "number", true),
 	})
 )
 
