@@ -4,8 +4,7 @@ go 1.12
 
 require (
 	github.com/hashicorp/go-hclog v0.16.1
-	github.com/hashicorp/nomad v1.1.1
-	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/hashicorp/nomad v1.1.14
 )
 
 // don't use shirou/gopsutil, use the hashicorp fork
