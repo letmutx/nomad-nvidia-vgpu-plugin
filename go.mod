@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/nomad v1.9.3
-	github.com/hashicorp/nomad-device-nvidia v1.0.1-0.20241001184652-ded723023fae
+	github.com/hashicorp/nomad-device-nvidia v1.0.1-0.20241209142239-08d1c99fd2eb
 )
 
 require (
@@ -131,6 +131,3 @@ require (
 replace github.com/shirou/gopsutil => github.com/hashicorp/gopsutil v2.17.13-0.20190117153606-62d5761ddb7d+incompatible
 
 replace github.com/armon/go-metrics => github.com/hashicorp/go-metrics v0.5.3
-
-// Latest fixed version of nomad-device-nvidia. See https://github.com/hashicorp/nomad-device-nvidia/pull/57
-replace github.com/hashicorp/nomad-device-nvidia => github.com/Quiq/nomad-device-nvidia v0.0.0-20241209091316-44041723bf10

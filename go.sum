@@ -19,8 +19,6 @@ github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migc
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/NVIDIA/go-nvml v0.12.4-0 h1:4tkbB3pT1O77JGr0gQ6uD8FrsUPqP1A/EOEm2wI1TUg=
 github.com/NVIDIA/go-nvml v0.12.4-0/go.mod h1:8Llmj+1Rr+9VGGwZuRer5N/aCjxGuR5nPb/9ebBiIEQ=
-github.com/Quiq/nomad-device-nvidia v0.0.0-20241209091316-44041723bf10 h1:66kNXIBUJf3NWN56d0ZInkQ7IY17iqJInNxCJTRu4fo=
-github.com/Quiq/nomad-device-nvidia v0.0.0-20241209091316-44041723bf10/go.mod h1:9k4nfHANhKpHIBV3S3ujh3CaYhVByaZj6DixImXGcc4=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
@@ -228,6 +226,8 @@ github.com/hashicorp/memberlist v0.5.1 h1:mk5dRuzeDNis2bi6LLoQIXfMH7JQvAzt3mQD0v
 github.com/hashicorp/memberlist v0.5.1/go.mod h1:zGDXV6AqbDTKTM6yxW0I4+JtFzZAJVoIPvss4hV8F24=
 github.com/hashicorp/nomad v1.9.3 h1:ELaS4T25OZP2bzhmtPVPQaqQbQStj9qDUUaK0xVPB7A=
 github.com/hashicorp/nomad v1.9.3/go.mod h1:SrSns5vhwIpfD0PsZY0ByP+Ob2G8Ipe/5UlWnD4C6YY=
+github.com/hashicorp/nomad-device-nvidia v1.0.1-0.20241209142239-08d1c99fd2eb h1:WOIZcRoP6s0ADKUjQfXKA8C5iZBsgKsoAmeTVNTzIu4=
+github.com/hashicorp/nomad-device-nvidia v1.0.1-0.20241209142239-08d1c99fd2eb/go.mod h1:9k4nfHANhKpHIBV3S3ujh3CaYhVByaZj6DixImXGcc4=
 github.com/hashicorp/raft v1.2.0/go.mod h1:vPAJM8Asw6u8LxC3eJCUZmRP/E4QmUGE1R7g7k8sG/8=
 github.com/hashicorp/raft v1.7.1 h1:ytxsNx4baHsRZrhUcbt3+79zc4ly8qm7pi0393pSchY=
 github.com/hashicorp/raft v1.7.1/go.mod h1:hUeiEwQQR/Nk2iKDD0dkEhklSsu3jcAcqvPzPoZSAEM=
